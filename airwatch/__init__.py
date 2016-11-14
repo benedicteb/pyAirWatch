@@ -16,36 +16,94 @@ class AirWatch(object):
             'accept': 'application/json'
         }
 
-    def get(self, relative_url):
+    def get(self, relative_url, **kwargs):
         url = urljoin(self.uribase, relative_url)
 
-        response = requests.get(url, auth=self.auth, headers=self.headers)
+        response = requests.get(url, auth=self.auth, headers=self.headers, **kwargs)
         verify_response(response)
 
         return response.json()
 
-    def get_device_by_serialnumber(self, serial_number):
-        return self.get('mdm/devices/serialnumber/%s' % serial_number)
+    def get_device_information(self, id, search_by='serialnumber'):
+        choices = [
+            'serialnumber',
+            'macaddress',
+            'udid',
+            'imeinumber',
+            'easid'
+        ]
 
-    def get_device_by_macaddress(self, mac_address):
-        return self.get('mdm/devices/macaddress/%s' % mac_address)
+        self._verify_choices(search_by, choices)
 
-    def get_device_by_udid(self, udid):
-        return self.get('mdm/devices/UDID/%s' % udid)
+        params = {
+            'id': id,
+            'searchby': search_by
+        }
 
-    def get_profiles_by_serialnumber(self, serial_number):
-        return self.get('mdm/devices/serialnumber/%s/profiles' % serial_number)
+        return self.get('mdm/devices', params=params)
 
-    def get_profiles_by_macaddress(self, mac_address):
-        return self.get('mdm/devices/macaddress/%s/profiles' % mac_address)
+    def get_device_profiles(self, id, search_by='serialnumber', page=None, page_size=None):
+        choices = [
+            'serialnumber',
+            'macaddress',
+            'udid',
+            'imeinumber'
+        ]
 
-    def get_profiles_by_udid(self, udid):
-        return self.get('mdm/devices/udid/%s/profiles' % udid)
+        self._verify_choices(search_by, choices)
+
+        params = {
+            'id': id,
+            'searchby': search_by
+        }
+
+        if page_size:
+            params['pagesize'] = page_size
+
+        if page:
+            params['page'] = page
+
+        return self.get('mdm/devices/profiles', params=params)
+
+    def get_profile(self, **params):
+        choices = [
+            'type',
+            'profilename',
+            'organizationgroupid',
+            'platform',
+            'status',
+            'ownership',
+            'orderby',
+            'sortorder',
+            'pagesize',
+            'page'
+        ]
+
+        self._verify_params(params, choices)
+
+        return self.get('mdm/profiles/search', params=params)
+
+    def get_profile_details(self, profile_id):
+        return self.get(urljoin('mdm/profiles/', profile_id))
 
     def get_organization_group(self, id):
         return self.get('system/groups/%s' % id)
 
+    def _verify_choices(self, search_by, choices):
+        if not search_by in choices:
+            raise Exception('Not able to search by \'%s\', possible choices: %s'\
+                % (search_by, ','.join(choices)))
+
+    def _verify_params(self, params, choices):
+        if any([p not in choices for p in params.keys()]):
+            raise Exception('Bad parameter given')
+
 def verify_response(response):
+    try:
+        response.json()
+    except Exception:
+        raise Exception('Unable to parse response as json')
+
     if str(response.status_code).startswith('2'):
         return
 
