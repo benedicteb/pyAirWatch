@@ -4,8 +4,8 @@ This is a python library for communicating with VMWare AirWatch via their REST
 API.
 
 Their API has many endpoints and not all of them are implemented with functions.
-However the library has an `get`, `post` and `delete`-functions that you can
-feed arbitrary URL's.
+However the library has a `get`, `post` and `delete`-functions that you can feed
+arbitrary URL's.
 
 I've tried to document what data you can send when. However the structure of the
 data you get back and how the data you send for example in POST-requests is not
@@ -39,7 +39,13 @@ from airwatch import AirWatch
 aw = AirWatch('api-username', 'api-password', 'api-code', 'hostname')
 ```
 
-Here are some examples on what you can do with the build-in functions.
+Hostname is without "https" or something like that. For example:
+
+```python
+aw = AirWatch('apiuser', 'mypassword', '123', 'airwatchconsole.mydomain.com')
+```
+
+Here are some examples on what you can do with the built-in functions.
 
 ```python
 aw.get(relative_url, params=params)
@@ -60,7 +66,7 @@ aw.get_device_information('search-parameter', search_by='serialnumber'):
 aw.get_device_profiles('search-parameter', search_by, page, page_size)
 aw.get_device_profiles('my-serial-number')
 
-# Get a speific profile
+# Search for profiles
 #
 # Available parameters are
 # - type,
@@ -125,7 +131,7 @@ aw.deactivate_product(product_id)
 # Alter a product's metadata
 #
 # Check out the API reference for the structure of the dictionary data.
-update_product(product_id, data)
+aw.update_product(product_id, data)
 
 # Search for files or actions
 #
@@ -136,5 +142,5 @@ update_product(product_id, data)
 # - lastmodifiedtill,
 # - pagesize,
 # - page
-search_files_or_actions(param1=param1, param2=param2)
+aw.search_files_or_actions(param1=param1, param2=param2)
 ```
