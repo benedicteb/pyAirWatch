@@ -85,7 +85,7 @@ class AirWatch(object):
 
         return self.get('mdm/devices/profiles', params=params)
 
-    def get_profile(self, **params):
+    def search_for_profile(self, **params):
         """
         Searches for all profiles applicable using the query information provided.
         """
@@ -106,15 +106,11 @@ class AirWatch(object):
 
         return self.get('mdm/profiles/search', params=params)
 
-    def get_profile_details(self, profile_id, version=None):
+    def get_profile(self, profile_id):
         """
         Gets device profile details identified by the profile Id.
         """
         url = urljoin('mdm/profiles/', profile_id)
-
-        if version:
-            url = urljoin(version, url)
-
         return self.get(url)
 
     def activate_device_profile(self, profile_id):
@@ -184,7 +180,11 @@ class AirWatch(object):
         self.post(url, data=data)
 
     def get_organization_group(self, id):
-        return self.get('system/groups/%s' % id)
+        """
+        Retrieves the details of the organization group.
+        """
+        url = urljoin('system/groups/', id)
+        return self.get(url)
 
     def search_for_product(self, **params):
         """
