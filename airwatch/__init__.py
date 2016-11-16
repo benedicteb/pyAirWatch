@@ -186,6 +186,81 @@ class AirWatch(object):
     def get_organization_group(self, id):
         return self.get('system/groups/%s' % id)
 
+    def search_for_product(self, **params):
+        """
+        Searches for the products with the search parameters passed.
+        """
+        choices = [
+            'name',
+            'organizationgroupid',
+            'managedbyorganizationgroupid',
+            'platform',
+            'smartgroupid',
+            'page',
+            'pagesize',
+            'orderby',
+            'sortorder'
+        ]
+
+        verify_params(params, choices)
+
+        url = 'mdm/products/search'
+        return self.get(url, params=params)
+
+    def get_product(self, product_id):
+        """
+        Get specified Product.
+        """
+        assert isinstance(product_id, (int, ))
+
+        url = urljoin('mdm/products/', product_id)
+        return self.get(url)
+
+    def activate_product(self, product_id):
+        """
+        Activates the product.
+        """
+        assert isinstance(product_id, (int, ))
+
+        url = urljoin('mdm/products/', product_id, '/activate')
+        self.post(url)
+
+    def deactivate_product(self, product_id):
+        """
+        Deactivates the product.
+        """
+        assert isinstance(product_id, (int, ))
+
+        url = urljoin('mdm/products/', product_id, '/deactivate')
+        self.post(url)
+
+    def update_product(self, product_id, data):
+        """
+        Updates the product details.
+        """
+        assert isinstance(product_id, (int, ))
+
+        url = urljoin('mdm/products/', product_id, '/update')
+        self.post(url, data=data)
+
+    def search_files_or_actions(self, **params):
+        """
+        Searches for the Files/Actions with the search parameters passed.
+        """
+        choices = [
+            'organizationgroupid',
+            'platform',
+            'lastmodifiedon',
+            'lastmodifiedtill',
+            'page',
+            'pagesize'
+        ]
+
+        verify_params(params, choices)
+
+        url = 'mdm/products/filesactionssearch'
+        return self.get(url, params=params)
+
 def verify_choices(search_by, choices):
     if not search_by in choices:
         raise Exception('Not able to search by \'%s\', possible choices: %s'\
