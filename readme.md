@@ -102,7 +102,25 @@ aw.remove_device_profile(profile_id, device_id=121)
 #
 # The data dictionary you send here has to have a certain structure. So check
 # out the API reference. You don't need to supply the "General"-key.
-aw.update_apple_device_profile(profile_id, data)
+#
+# This example alters a profile by adding custom settings which basically is the
+# Payload-part of a profile plist.
+data = {
+    'CustomSettingsList': [
+        {
+            'CustomSettings': '<Put the payload xml here>'
+        }
+    ]
+}
+
+# Do note that this endpoint has a lot of parameters - you can alter all
+# parameters of the profile. For example name, which smart groups it's assigned
+# to and so on. This function only alters the settings bit. The whole
+# "General"-payload is overwritten in the function if you supply it. This is to
+# make life easier - since the "General"-payload has a lot of required values
+# and my main goal here is to alter only the settings-bit. You're welcome to
+# come with suggestions for better ways to implement this!
+aw.update_appleosx_device_profile(profile_id, data)
 
 # Get info about an organization group
 aw.get_organization_group(id)

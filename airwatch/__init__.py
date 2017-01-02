@@ -162,20 +162,39 @@ class AirWatch(object):
         url = urljoin('mdm/profiles/', profile_id, 'remove')
         self.post(url, data=payload)
 
-    def update_apple_device_profile(self, profile_id, data):
+    def update_appleosx_device_profile(self, profile_id, data):
         """
         Updates an Apple device profile identified by its numeric ID.
+
+        This endpoint requires a lot of data. We use the strategy of
+        automatically filling in all this data from what the profile already has
+        set. This makes the process of altering only the settings easier since
+        you don't have to worry about all the other payload keys.
         """
-        url = 'mdm/profiles/platforms/apple/update'
+        url = 'mdm/profiles/platforms/appleosx/update'
 
         assert isinstance(profile_id, (int, ))
 
-        if 'General' in data.keys():
-            data['General']['ProfileId'] = profile_id
-        else:
-            data['General'] = {
-                'ProfileId': profile_id
-            }
+        # Current profile data
+        cpd = self.get_profile(profile_id)
+
+        # Current profile data general
+        cpdg = cpd['General']
+
+        payload = data
+        payload['General'] = {
+            'AssignmentType': cpdg['AssignmentType'],
+            'CreateNewVersion': True,
+            'IsActive': cpdg['IsActive'],
+            'IsManaged': cpdg['IsManaged'],
+            'ManagedLocationGroupID': cpdg['ManagedLocationGroupID'],
+            'Name': cpdg['Name'],
+            'ProfileContext': cpdg['ProfileContext'],
+            'ProfileId': profile_id
+        }
+
+        if 'AssignedSmartGroups' in cpdg.keys():
+            payload['General']['AssignedSmartGroups'] = cpdg['AssignedSmartGroups']
 
         self.post(url, data=data)
 
