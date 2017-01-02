@@ -3,7 +3,7 @@ import requests
 
 from requests.auth import HTTPBasicAuth
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 class AirWatch(object):
     def __init__(self, username, password, apicode, host):
