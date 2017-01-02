@@ -3,7 +3,7 @@ import requests
 
 from requests.auth import HTTPBasicAuth
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 class AirWatch(object):
     def __init__(self, username, password, apicode, host):
@@ -13,7 +13,8 @@ class AirWatch(object):
         self.headers = {
             'User-Agent': '/'.join(['pyAirWatch', __version__]),
             'aw-tenant-code': apicode,
-            'accept': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json;version=2'
         }
 
     def get(self, relative_url, **kwargs):
@@ -162,20 +163,39 @@ class AirWatch(object):
         url = urljoin('mdm/profiles/', profile_id, 'remove')
         self.post(url, data=payload)
 
-    def update_apple_device_profile(self, profile_id, data):
+    def update_appleosx_device_profile(self, profile_id, data):
         """
         Updates an Apple device profile identified by its numeric ID.
+
+        This endpoint requires a lot of data. We use the strategy of
+        automatically filling in all this data from what the profile already has
+        set. This makes the process of altering only the settings easier since
+        you don't have to worry about all the other payload keys.
         """
-        url = 'mdm/profiles/platforms/apple/update'
+        url = 'mdm/profiles/platforms/appleosx/update'
 
         assert isinstance(profile_id, (int, ))
 
-        if 'General' in data.keys():
-            data['General']['ProfileId'] = profile_id
-        else:
-            data['General'] = {
-                'ProfileId': profile_id
-            }
+        # Current profile data
+        cpd = self.get_profile(profile_id)
+
+        # Current profile data general
+        cpdg = cpd['General']
+
+        payload = data
+        payload['General'] = {
+            'AssignmentType': cpdg['AssignmentType'],
+            'CreateNewVersion': True,
+            'IsActive': cpdg['IsActive'],
+            'IsManaged': cpdg['IsManaged'],
+            'ManagedLocationGroupID': cpdg['ManagedLocationGroupID'],
+            'Name': cpdg['Name'],
+            'ProfileContext': cpdg['ProfileContext'],
+            'ProfileId': profile_id
+        }
+
+        if 'AssignedSmartGroups' in cpdg.keys():
+            payload['General']['AssignedSmartGroups'] = cpdg['AssignedSmartGroups']
 
         self.post(url, data=data)
 
