@@ -13,7 +13,8 @@ class AirWatch(object):
         self.headers = {
             'User-Agent': '/'.join(['pyAirWatch', __version__]),
             'aw-tenant-code': apicode,
-            'accept': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json;version=2'
         }
 
     def get(self, relative_url, **kwargs):
