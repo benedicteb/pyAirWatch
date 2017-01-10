@@ -281,6 +281,72 @@ class AirWatch(object):
         url = 'mdm/products/filesactionssearch'
         return self.get(url, params=params)
 
+    def search_for_applications(self, **params):
+        """
+        Searches for the applications with the search parameters passed.
+        """
+        choices = [
+            'applicationname',
+            'category',
+            'locationgroupid',
+            'ApplicationType',
+            'bundleid',
+            'platform',
+            'model',
+            'status',
+            'orderby',
+            'page',
+            'pagesize'
+        ]
+
+        verify_params(params, choices)
+
+        url = 'mam/apps/search'
+        return self.get(url, params=params)
+
+    def search_for_smart_groups(self, **params):
+        """
+        Searches for the smart groups with the search parameters passed.
+        """
+        choices = [
+            'name',
+            'organizationgroupid',
+            'managedbyorganizationgroupid',
+            'page',
+            'pagesize',
+            'orderby',
+            'sortorder'
+        ]
+
+        verify_params(params, choices)
+
+        url = 'mdm/smartgroups/search'
+        return self.get(url, params=params)
+
+    def assign_internal_application(self, application_id, smartgroup_id):
+        """
+        Add an assignment group to an internal application.
+        """
+        assert isinstance(application_id, (int, ))
+        assert isinstance(smartgroup_id, (int, ))
+
+        url = 'mam/apps/internal/%s/addsmartgroup/%s'\
+            % (application_id, smartgroup_id)
+
+        self.post(url)
+
+    def remove_assignment_internal_application(self, application_id, smartgroup_id):
+        """
+        Remove an assignment group from an internal application.
+        """
+        assert isinstance(application_id, (int, ))
+        assert isinstance(smartgroup_id, (int, ))
+
+        url = 'mam/apps/internal/%s/deletesmartgroup/%s'\
+            % (application_id, smartgroup_id)
+
+        self.post(url)
+
 def verify_choices(search_by, choices):
     if not search_by in choices:
         raise Exception('Not able to search by \'%s\', possible choices: %s'\
