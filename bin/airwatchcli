@@ -1,0 +1,114 @@
+#!/usr/bin/env python
+import argparse
+import getpass
+import json
+import os
+
+from airwatch import AirWatch
+
+def json_format(data):
+    return json.dumps(data, indent=2, sort_keys=True)
+
+def assign_smartgroups_to_internal_application(aw, args):
+    """
+    Assign smart
+    """
+    for smart_group_id in args.smart_group_ids:
+        aw.assign_internal_application(args.application_id, smart_group_id)
+
+def remove_smartgroups_from_internal_application(aw, args):
+    """
+    Remove smart
+    """
+    for smart_group_id in args.smart_group_ids:
+        aw.remove_assignment_internal_application(args.application_id, smart_group_id)
+
+def search_for_smart_group(aw, args):
+    data = aw.search_for_smart_groups(name=args.name)
+    print json_format(data)
+
+def search_for_application(aw, args):
+    data = aw.search_for_applications(applicationname=args.name)
+    print json_format(data)
+
+if __name__ == '__main__':
+    p = argparse.ArgumentParser()
+
+    p.add_argument('--host', type=str,
+        help='The AirWatch host')
+    p.add_argument('-u', '--username', type=str,
+        help='Username')
+    p.add_argument('-p', '--password', type=str,
+        help='Password')
+    p.add_argument('--apicode', type=str,
+        help='API-code')
+    p.add_argument('-v', '--verbose', action='store_true',
+        help='Be verbose.')
+
+    sp = p.add_subparsers(dest='cmdstr')
+
+    sp1 = sp.add_parser('application-add-smartgroups')
+    sp1.add_argument('--application-id', type=int, required=True,
+        help='The ID of the internal application to update.')
+    sp1.add_argument('--smart-group-ids', nargs='+', required=True, type=int,
+        help='IDs of the smart groups you want to assign.')
+    sp1.set_defaults(cmd=assign_smartgroups_to_internal_application)
+
+    sp2 = sp.add_parser('search-smart-group')
+    sp2.add_argument('-n', '--name', type=str,
+        help='Name of the smart group.')
+    sp2.set_defaults(cmd=search_for_smart_group)
+
+    sp3 = sp.add_parser('search-application')
+    sp3.add_argument('-n', '--name', type=str,
+        help='Name of the application.')
+    sp3.set_defaults(cmd=search_for_application)
+
+    sp4 = sp.add_parser('application-remove-smartgroups')
+    sp4.add_argument('--application-id', type=int, required=True,
+        help='The ID of the internal application to update.')
+    sp4.add_argument('--smart-group-ids', nargs='+', required=True, type=int,
+        help='IDs of the smart groups you want to remove.')
+    sp4.set_defaults(cmd=remove_smartgroups_from_internal_application)
+
+    args = p.parse_args()
+
+    if not args.host:
+        host = os.getenv('AWHOST')
+
+        if not host:
+            host = raw_input('Host: ')
+    else:
+        host = args.host
+
+    if not args.username:
+        username = os.getenv('AWUSERNAME')
+
+        if not username:
+            username = raw_input('Username: ')
+    else:
+        username = args.username
+
+    if not args.password:
+        password = os.getenv('AWPASSWORD')
+
+        if not password:
+            password = getpass.getpass('Password: ')
+    else:
+        password = args.password
+
+    if not args.apicode:
+        apicode = os.getenv('AWAPICODE')
+
+        if not apicode:
+            apicode = raw_input('API-code: ')
+    else:
+        apicode = args.apicode
+
+    if args.verbose:
+        print 'Host: %s' % host
+        print 'Username: %s' % username
+
+    aw = AirWatch(username, password, apicode, host)
+
+    args.cmd(aw, args)

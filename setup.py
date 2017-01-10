@@ -32,10 +32,13 @@ install_requires=[
     'requests',
 ]
 
+scripts=['bin/airwatchcli']
+
 setup(name=name,
       version=version,
       description=description,
       author=author,
       author_email=author_email,
       packages=packages,
-      install_requires=install_requires)
+      install_requires=install_requires,
+      scripts=scripts)
