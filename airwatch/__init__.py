@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 import requests
+import sys
+import os.path as op
+import math
 
 from requests.auth import HTTPBasicAuth
+
+from airwatch.helpers import FileChunkIterator
 
 __version__ = '0.0.3'
 
@@ -36,6 +41,8 @@ class AirWatch(object):
                 **kwargs)
 
         verify_response(response)
+
+        return response
 
     def delete(self, relative_url, **kwargs):
         url = urljoin(self.uribase, relative_url)
@@ -346,6 +353,59 @@ class AirWatch(object):
             % (application_id, smartgroup_id)
 
         self.post(url)
+
+    def upload_application(self, application_name, path_to_file, push_mode='Auto', locationgroup_id=None):
+        """
+        """
+        url = 'mam/apps/internal/uploadchunk'
+        first = True
+
+        # Maximum chunk size allowed before 413 found by experimenting
+        chunk_size = 35840
+
+        iterator = FileChunkIterator(path_to_file, chunk_size=chunk_size)
+        file_size = op.getsize(path_to_file)
+        no_chunks = file_size / float(chunk_size)
+
+        for chunk in iterator:
+            resp = self.post(url, data=chunk).json()
+
+            if not resp['UploadSuccess']:
+                raise Exception('Upload failed')
+
+            if first:
+                iterator.set_transaction_id(resp['TranscationId'])
+                first = False
+
+            percentage = int(math.floor((chunk['ChunkSequenceNumber'] / no_chunks) * 100))
+            sys.stdout.write('\r%3d %s' % (percentage, '%'))
+            sys.stdout.flush()
+
+        # Exit the \r printing
+        sys.stdout.write('\r100 %\n')
+        sys.stdout.flush()
+
+        merge_url = 'mam/apps/internal/begininstall'
+
+        data = {
+            'TransactionId': iterator.transaction_id,
+            'ApplicationName': application_name,
+            'PushMode': push_mode,
+            'DeviceType': 2,
+            'SupportedModels': {
+                'Model': [
+                    {
+                        'ModelId': 2,
+                        'ModelName': 'iPad',
+                    }
+                ]
+            }
+        }
+
+        if locationgroup_id:
+            data['LocationGroupId'] = locationgroup_id
+
+        self.post(merge_url, data=data)
 
 def verify_choices(search_by, choices):
     if not search_by in choices:

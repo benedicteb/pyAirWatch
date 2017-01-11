@@ -31,6 +31,13 @@ def search_for_application(aw, args):
     data = aw.search_for_applications(applicationname=args.name)
     print json_format(data)
 
+def application_upload(aw, args):
+    if args.locationgroup_id:
+        aw.upload_application(args.application_name, args.applicationfile,
+            locationgroup_id=args.locationgroup_id)
+    else:
+        aw.upload_application(args.application_name, args.applicationfile)
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
 
@@ -70,6 +77,15 @@ if __name__ == '__main__':
     sp4.add_argument('--smart-group-ids', nargs='+', required=True, type=int,
         help='IDs of the smart groups you want to remove.')
     sp4.set_defaults(cmd=remove_smartgroups_from_internal_application)
+
+    sp5 = sp.add_parser('application-upload')
+    sp5.add_argument('--application-name', type=str, required=True,
+        help='Name of the application.')
+    sp5.add_argument('--locationgroup-id', type=int,
+        help='ID of the managed location group.')
+    sp5.add_argument('applicationfile', type=str,
+        help='Path to the file to upload.')
+    sp5.set_defaults(cmd=application_upload)
 
     args = p.parse_args()
 
